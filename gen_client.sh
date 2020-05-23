@@ -1,6 +1,7 @@
 #!/bin/sh
 
-config_dir=$XDG_CONFIG_HOME/dwm
+rm /tmp/dwmc
+rm /tmp/signals
 #parse the functions from header
 funs="$(cat $1 | grep "{ MOD")"
 names="$(printf "$funs" | awk '{print $4}' | sed "s/,//g")\n"
@@ -40,10 +41,9 @@ printf "\t case \$1 in\n" >> /tmp/dwmc
 #and function for printing available functions
 cases=""
 fun_list=""
-signals="static Signal signals [ ] = {\n\t/* signum           function */\n"
+signals="static Signal signals [] = {\n\t/* signum           function */\n"
 IFS='
 '
-printf "" > $config_dir/functions
 for fun in $(printf "$formatted")
 do
 	metaarg="\$2"
@@ -68,9 +68,10 @@ printf 'signal $1 $arg\n' >> /tmp/dwmc
 chmod +x /tmp/dwmc
 
 #replace the signals in header
-linen="$(cat $1 | grep "static Signal signals" -n | cut -d":" -f1)"
+linen=$(($(cat $1 | grep "static Signal signals" -n | cut -d":" -f1) -1))
 printf "$signals" > /tmp/signals
-cat $1 | sed '/static Signal signals\[\] = {/,/};/d' > /tmp/config
-sed "$linen r /tmp/signals" "/tmp/config" > $1
+sed -i '/static Signal signals/,/};/d' $1
+#sed "$linen r /tmp/signals" "$1" > $1
+sed -i "$linen r /tmp/signals" $1
 sudo rm /usr/bin/dwmc
 sudo cp /tmp/dwmc /usr/bin/dwmc 
