@@ -1,0 +1,60 @@
+
+super + ctrl + {Down,Up}
+	pactl set-sink-volume @DEFAULT_SINK@ {-,+}5%
+
+super + Return
+	st
+
+# dwm
+
+super + shift + space
+	$SCRIPTS/global_menu.sh -w
+
+super + {k,j}
+	dwmc focusstack {-,+}1
+
+super + shift + {k,j}
+	dwmc movestack {-,+}1
+
+super + ctrl + {h,l}
+	dwmc setmfact {-,+}0.05
+
+super + ctrl + {j,k}
+	dwmc setcfact {-,+}0.25
+
+super + shift + h
+	dwmc rotatestack 1 ; dwmc focusstack -1
+super + shift + l
+	dwmc rotatestack -1 ; dwmc focusstack 1
+
+super + f
+	dwmc togglefullscreen
+
+super + shift + f
+	dwmc togglefloat
+
+super + b
+	dwmc togglebar
+
+super + BackSpace
+	dwmc killclient
+
+super + shift + q
+	dwmc quit 0
+
+super + shift + r
+	pkill sxhkd; $XDG_CONFIG_HOME/dwm/autostart.sh
+
+super + Tab
+	dwmc zoom
+
+super + {braceleft,braceright}
+	dwmc cyclelayout {-,+}1
+
+super + {_, shift, ctrl + } {0-9}
+	dwmc {view,toggletag,toggleview} {0-9}
+
+super + {comma,period}
+	dwmc shiftviewclients {-,+}1
+
+
