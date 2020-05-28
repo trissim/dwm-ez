@@ -9,7 +9,6 @@ static const unsigned int gappoh         = 10;  /* horiz outer gap between windo
 static const unsigned int gappov         = 10;  /* vert outer gap between windows and screen edge */
 static const int smartgaps               = 0;   /* 1 means no outer gap when there is only one window */
 static const int showbar                 = 1;   /* 0 means no bar */
-static const int centered_title          = 0;   /* 0 means not centered */
 static const int topbar                  = 1;   /* 0 means bottom bar */
 static const int vertpad                 = 10;  /* vertical padding of bar */
 static const int sidepad                 = 10;  /* horizontal padding of bar */
@@ -18,8 +17,7 @@ static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows sel
 static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray             = 1;   /* 0 means no systray */
-static const char *fonts[]               = { "monospace:size=10:antialias=true:autohint=true"
-					     "fontawesome:size=10:dpi=108:antialias=true:autohint=true"};
+static const char *fonts[]               = { "monospace:size=10" , "fontawesome:size=10" };
 static const char dmenufont[]            = "monospace:size=10";
 
 static char normfgcolor[]                = "#bbbbbb";
@@ -38,6 +36,9 @@ static char urgfgcolor[]                 = "#000000";
 static char urgbgcolor[]                 = "#000000";
 static char urgbordercolor[]             = "#ff0000"; // NB: patch only works with border color for now
 
+static char hidfgcolor[]                 = "#005577";
+static char hidbgcolor[]                 = "#222222";
+static char hidbordercolor[]             = "#005577";
 
 
 static
@@ -47,16 +48,15 @@ char *colors[][3] = {
 	[SchemeSel]   = { selfgcolor,   selbgcolor,   selbordercolor  },
 	[SchemeWarn]  = { warnfgcolor,  warnbgcolor,  warnbordercolor },
 	[SchemeUrg]   = { urgfgcolor,   urgbgcolor,   urgbordercolor },
+	[SchemeHid]   = { hidfgcolor,   hidbgcolor,   hidbordercolor  },
 };
 
 const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
 const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
-const char *spcmd3[] = {"keepassxc", NULL };
 static Sp scratchpads[] = {
    /* name          cmd  */
    {"spterm",      spcmd1},
    {"spranger",    spcmd2},
-   {"keepassxc",   spcmd3},
 };
 
 /* tagging */
@@ -75,12 +75,14 @@ static const Rule rules[] = {
 	{ "discord",   NULL,       NULL,       NULL,         1 << 7,           0,           0,           0,          0,         -1 },
 	{ "Steam",     NULL,       NULL,       NULL,         1 << 6,           0,           0,           0,          0,         -1 },
 	{ "Zathura",   NULL,       NULL,       NULL,         1 << 2,           0,           0,           0,          0,         -1 },
+	{ "mpv",   NULL,       NULL,       NULL,             1 << 1,           0,           0,           0,          0,         -1 },
 };
 
 
 /* signal definitions */
 /* signum must be greater than 0 */
 /* trigger signals using `xsetroot -name "fsignal:<signame> [<type> <value>]"` */
+
 static Signal signals [] = {
 	/* signum           function */
 	{ "combotag",	combotag },
@@ -92,7 +94,6 @@ static Signal signals [] = {
 	{ "focusmon",	focusmon },
 	{ "focusstack",	focusstack },
 	{ "incnmaster",	incnmaster },
-	{ "incnstack",	incnstack },
 	{ "incrgaps",	incrgaps },
 	{ "incrigaps",	incrigaps },
 	{ "incrihgaps",	incrihgaps },
@@ -100,12 +101,9 @@ static Signal signals [] = {
 	{ "incrogaps",	incrogaps },
 	{ "incrohgaps",	incrohgaps },
 	{ "incrovgaps",	incrovgaps },
-	{ "inplacerotate",	inplacerotate },
 	{ "killclient",	killclient },
-	{ "mirrorlayout",	mirrorlayout },
 	{ "movestack",	movestack },
 	{ "quit",	quit },
-	{ "rotatelayoutaxis",	rotatelayoutaxis },
 	{ "rotatestack",	rotatestack },
 	{ "self_restart",	self_restart },
 	{ "setborderpx",	setborderpx },
@@ -115,15 +113,13 @@ static Signal signals [] = {
 	{ "setlayout",	setlayout },
 	{ "setmfact",	setmfact },
 	{ "shiftviewclients",	shiftviewclients },
+	{ "shiftview",	shiftview },
+	{ "showhideclient",	showhideclient },
 	{ "spawn",	spawn },
 	{ "swapfocus",	swapfocus },
 	{ "swaptags",	swaptags },
-	{ "tagandviewtoleft",	tagandviewtoleft },
-	{ "tagandviewtoright",	tagandviewtoright },
 	{ "tagmon",	tagmon },
 	{ "tagswapmon",	tagswapmon },
-	{ "tagtoleft",	tagtoleft },
-	{ "tagtoright",	tagtoright },
 	{ "tag",	tag },
 	{ "togglealttag",	togglealttag },
 	{ "togglebar",	togglebar },
@@ -143,8 +139,6 @@ static Signal signals [] = {
 	{ "toggleview",	toggleview },
 	{ "transfer",	transfer },
 	{ "view",	view },
-	{ "viewtoleft",	viewtoleft },
-	{ "viewtoright",	viewtoright },
 	{ "view",	view },
 	{ "xrdb",	xrdb },
 	{ "zoom",	zoom },
@@ -153,13 +147,9 @@ static Signal signals [] = {
 
 
 
-
-
-
 /* layout(s) */
 static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
-static const int nstack      = 0;    /* number of clients in primary stack area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 
 #define FORCE_VSPLIT 1
@@ -168,34 +158,23 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 #define MONOCLE_LAYOUT_POS 2
 
 static const Layout layouts[] = {
-	/* symbol     arrange function, { nmaster, nstack, layout, master axis, stack axis, secondary stack axis } */
-	{ "[]=",      flextile,         { -1, -1, SPLIT_VERTICAL, TOP_TO_BOTTOM, TOP_TO_BOTTOM, 0, NULL } }, // default tile layout
- 	{ "><>",      NULL,             {0} },    /* no layout function means floating behavior */
-	{ "[M]",      flextile,         { -1, -1, NO_SPLIT, MONOCLE, 0, 0, NULL } }, // monocle
-	{ "|||",      flextile,         { -1, -1, SPLIT_VERTICAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, 0, NULL } }, // columns (col) layout
-	{ ">M>",      flextile,         { -1, -1, FLOATING_MASTER, LEFT_TO_RIGHT, LEFT_TO_RIGHT, 0, NULL } }, // floating master
-	{ "[D]",      flextile,         { -1, -1, SPLIT_VERTICAL, TOP_TO_BOTTOM, MONOCLE, 0, NULL } }, // deck
-	{ "TTT",      flextile,         { -1, -1, SPLIT_HORIZONTAL, LEFT_TO_RIGHT, LEFT_TO_RIGHT, 0, NULL } }, // bstack
-	{ "===",      flextile,         { -1, -1, SPLIT_HORIZONTAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, 0, NULL } }, // bstackhoriz
-	{ "|M|",      flextile,         { -1, -1, SPLIT_HORIZONTAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, 0, monoclesymbols } }, // centeredmaster
-	{ ":::",      flextile,         { -1, -1, NO_SPLIT, GAPPLESSGRID, 0, 0, NULL } }, // gappless grid
-	{ "[\\]",     flextile,         { -1, -1, NO_SPLIT, DWINDLE, 0, 0, NULL } }, // fibonacci dwindle
-	{ "(@)",      flextile,         { -1, -1, NO_SPLIT, SPIRAL, 0, 0, NULL } }, // fibonacci spiral
-	{ "[]=",      tile,             {0} },
-	{ "[M]",      monocle,          {0} },
-	{ "TTT",      bstack,           {0} },
-	{ "===",      bstackhoriz,      {0} },
-	{ "|M|",      centeredmaster,   {0} },
-	{ ">M>",      centeredfloatingmaster, {0} },
-	{ "|||",      col,              {0} },
-	{ "[D]",      deck,             {0} },
-	{ "(@)",      spiral,           {0} },
-	{ "[\\]",     dwindle,          {0} },
-	{ "HHH",      grid,             {0} },
-	{ "---",      horizgrid,        {0} },
-	{ ":::",      gaplessgrid,      {0} },
-	{ "###",      nrowgrid,         {0} },
-	{ NULL,       NULL,             {0} },
+	/* symbol     arrange function */
+	{ "[]=",      tile },    /* first entry is default */
+	{ "><>",      NULL },    /* no layout function means floating behavior */
+	{ "[M]",      monocle },
+	{ "TTT",      bstack },
+	{ "===",      bstackhoriz },
+	{ "|M|",      centeredmaster },
+	{ ">M>",      centeredfloatingmaster },
+	{ "|||",      col },
+	{ "[D]",      deck },
+	{ "(@)",      spiral },
+	{ "[\\]",     dwindle },
+	{ "HHH",      grid },
+	{ "---",      horizgrid },
+	{ ":::",      gaplessgrid },
+	{ "###",      nrowgrid },
+	{ NULL,       NULL },
 };
 
 /* key definitions */
@@ -236,12 +215,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_s,          swapfocus,              {.i = -1 } },
 	{ MODKEY|Mod4Mask,              XK_j,          rotatestack,            {.i = +1 } },
 	{ MODKEY|Mod4Mask,              XK_k,          rotatestack,            {.i = -1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_j,          inplacerotate,          {.i = +1} },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_k,          inplacerotate,          {.i = -1} },
 	{ MODKEY,                       XK_i,          incnmaster,             {.i = +1 } },
 	{ MODKEY,                       XK_d,          incnmaster,             {.i = -1 } },
-	{ MODKEY|ControlMask,           XK_i,          incnstack,              {.i = +1 } },
-	{ MODKEY|ControlMask,           XK_u,          incnstack,              {.i = -1 } },
 	{ MODKEY,                       XK_h,          setmfact,               {.f = -0.05} },
 	{ MODKEY,                       XK_l,          setmfact,               {.f = +0.05} },
 	{ MODKEY|ShiftMask,             XK_h,          setcfact,               {.f = +0.25} },
@@ -268,8 +243,11 @@ static Key keys[] = {
 	{ MODKEY|Mod4Mask,              XK_0,          togglegaps,             {0} },
 	{ MODKEY|Mod4Mask|ShiftMask,    XK_0,          defaultgaps,            {0} },
 	{ MODKEY,                       XK_Tab,        view,                   {0} },
+	{ MODKEY|ShiftMask,             XK_Tab,        shiftview,              { .i = -1 } },
+	{ MODKEY|ShiftMask,             XK_backslash,  shiftview,              { .i = +1 } },
 	{ MODKEY|Mod4Mask,              XK_Tab,        shiftviewclients,       { .i = -1 } },
 	{ MODKEY|Mod4Mask,              XK_backslash,  shiftviewclients,       { .i = +1 } },
+	{ MODKEY|ControlMask,           XK_z,          showhideclient,         {0} },
 	{ MODKEY|ShiftMask,             XK_c,          killclient,             {0} },
 	{ MODKEY|ShiftMask,             XK_r,          self_restart,           {0} },
 	{ MODKEY|ShiftMask,             XK_q,          quit,                   {0} },
@@ -279,15 +257,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_f,          setlayout,              {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,          setlayout,              {.v = &layouts[2]} },
 	{ MODKEY,                       XK_c,          setlayout,              {.v = &layouts[3]} },
-	{ MODKEY|ControlMask,           XK_t,          rotatelayoutaxis,       {.i = +1 } },   /* flextile, 1 = layout axis */
-	{ MODKEY|ControlMask,           XK_Tab,        rotatelayoutaxis,       {.i = +2 } },   /* flextile, 2 = master axis */
-	{ MODKEY|ControlMask|ShiftMask, XK_Tab,        rotatelayoutaxis,       {.i = +3 } },   /* flextile, 3 = stack axis */
-	{ MODKEY|ControlMask|Mod1Mask,  XK_Tab,        rotatelayoutaxis,       {.i = +4 } },   /* flextile, 4 = secondary stack axis */
-	{ MODKEY|Mod5Mask,              XK_t,          rotatelayoutaxis,       {.i = -1 } },   /* flextile, 1 = layout axis */
-	{ MODKEY|Mod5Mask,              XK_Tab,        rotatelayoutaxis,       {.i = -2 } },   /* flextile, 2 = master axis */
-	{ MODKEY|Mod5Mask|ShiftMask,    XK_Tab,        rotatelayoutaxis,       {.i = -3 } },   /* flextile, 3 = stack axis */
-	{ MODKEY|Mod5Mask|Mod1Mask,     XK_Tab,        rotatelayoutaxis,       {.i = -4 } },   /* flextile, 4 = secondary stack axis */
-	{ MODKEY|ControlMask,           XK_Return,     mirrorlayout,           {0} },         /* flextile, flip master and stack areas */
 	{ MODKEY,                       XK_space,      setlayout,              {0} },
 	{ MODKEY|ShiftMask,             XK_space,      togglefloating,         {0} },
 	{ MODKEY|ControlMask|ShiftMask, XK_h,          togglehorizontalmax,    {0} },
@@ -307,12 +276,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_period,     focusmon,               {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,      tagmon,                 {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period,     tagmon,                 {.i = +1 } },
-	{ MODKEY,                       XK_Left,       viewtoleft,             {0} },
-	{ MODKEY,                       XK_Right,      viewtoright,            {0} },
-	{ MODKEY|ShiftMask,             XK_Left,       tagtoleft,              {0} },
-	{ MODKEY|ShiftMask,             XK_Right,      tagtoright,             {0} },
-	{ MODKEY|ControlMask,           XK_Left,       tagandviewtoleft,       {0} },
-	{ MODKEY|ControlMask,           XK_Right,      tagandviewtoright,      {0} },
 	{ MODKEY|Mod4Mask|ControlMask,  XK_comma,      tagswapmon,             {.i = +1 } },
 	{ MODKEY|Mod4Mask|ControlMask,  XK_period,     tagswapmon,             {.i = -1 } },
 	{ MODKEY,                       XK_n,          togglealttag,           {0} },
@@ -364,6 +327,8 @@ static Button buttons[] = {
 	/* click                event mask           button          function        argument */
 	{ ClkLtSymbol,          0,                   Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,                   Button3,        setlayout,      {.v = &layouts[2]} },
+	{ ClkWinTitle,          0,                   Button1,        togglewin,      {0} },
+	{ ClkWinTitle,          0,                   Button3,        showhideclient, {0} },
 	{ ClkWinTitle,          0,                   Button2,        zoom,           {0} },
 	{ ClkStatusText,        0,                   Button2,        spawn,          {.v = termcmd } },
 	{ ClkClientWin,         MODKEY,              Button1,        movemouse,      {0} },

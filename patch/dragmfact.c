@@ -28,33 +28,9 @@ dragmfact(const Arg *arg)
 		|| m->lt[m->sellt]->arrange == &horizgrid
 		|| m->lt[m->sellt]->arrange == &gaplessgrid
 		|| m->lt[m->sellt]->arrange == &nrowgrid
-		|| (m->lt[m->sellt]->arrange == &flextile && m->ltaxis[LAYOUT] == NO_SPLIT)
 	)
 		return;
 
-	if (m->lt[m->sellt]->arrange == &flextile) {
-		int layout = m->ltaxis[LAYOUT];
-		if (layout < 0) {
-			mirror = 1;
-			layout *= -1;
-		}
-		if (layout > FLOATING_MASTER)
-			layout -= FLOATING_MASTER;
-
-		if (layout == SPLIT_HORIZONTAL || layout == SPLIT_HORIZONTAL_DUAL_STACK)
-			horizontal = 1;
-		else if (layout == SPLIT_CENTERED_VERTICAL)
-			center = 1;
-		else if (layout == FLOATING_MASTER) {
-			center = 1;
-			if (aw < ah)
-				horizontal = 1;
-		}
-		else if (layout == SPLIT_CENTERED_HORIZONTAL) {
-			horizontal = 1;
-			center = 1;
-		}
-	}
 	else if (m->lt[m->sellt]->arrange == &centeredmaster)
 		center = 1;
 	else if (m->lt[m->sellt]->arrange == &centeredfloatingmaster)

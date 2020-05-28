@@ -25,6 +25,9 @@ loadxrdb(void)
 				XRDB_LOAD_COLOR("dwm.selbordercolor", selbordercolor);
 
 
+				XRDB_LOAD_COLOR("dwm.hidfgcolor", hidfgcolor);
+				XRDB_LOAD_COLOR("dwm.hidbgcolor", hidbgcolor);
+				XRDB_LOAD_COLOR("dwm.hidbordercolor", hidbordercolor);
 
 			}
 		}
